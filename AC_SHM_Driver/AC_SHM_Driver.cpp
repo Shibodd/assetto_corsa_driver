@@ -1,80 +1,55 @@
 #include <iostream>
 #include <string>
 #include <chrono>
+#include <unordered_map>
+#include <thread>
 
 #include "shared_file_out.h"
 #include "shm_struct_wrapper.hpp"
-
-#include "vjoy/public.h"
-#include "vjoy/vjoyinterface.h"
-
+#include "ac_controls.hpp"
 
 using namespace std::chrono_literals;
-
-void check_vjoy_lib() {
-    if (!vJoyEnabled())
-        throw std::runtime_error("Is VJoy installed?");
-
-    WORD VerDll, VerDrv;
-    if (!DriverMatch(&VerDll, &VerDrv))
-        throw std::runtime_error("VJoy version mismatch (dll: " + std::to_string(VerDll) + ", driver: " + std::to_string(VerDrv) + ")");
-}
-
-class VJoyDeviceWrapper {
-    BYTE m_idx;
-
-    JOYSTICK_POSITION_V2 m_data;
-public:
-    VJoyDeviceWrapper(BYTE idx) : m_idx(idx) {
-        auto state = GetVJDStatus(idx);
-        if (state != VJD_STAT_FREE)
-            throw std::runtime_error("VJoy device " + std::to_string(idx) + " is not free (is " + std::to_string(state) + ")");
-
-        if (!AcquireVJD(idx))
-            throw std::runtime_error("Failed to acquire VJoy device " + std::to_string(idx));
-
-        memset(&this->data(), 0, sizeof(JOYSTICK_POSITION_V2));
-    }
-    ~VJoyDeviceWrapper() { RelinquishVJD(m_idx); }
-
-    bool update() {
-        m_data.bDevice = m_idx;
-        return UpdateVJD(m_idx, static_cast<void*>(&m_data));
-    }
-    JOYSTICK_POSITION_V2& data() { return m_data; }
-};
-
-
 
 int main()
 {
     try {
-        check_vjoy_lib();
-        VJoyDeviceWrapper wrapper(1);
+        SHMStructWrapper<ac_shm::SPageFilePhysics> physics(TEXT("Local\\acpmf_physics"));
 
-        SHMStructWrapper<SPageFilePhysics> physics(TEXT("Local\\acpmf_physics"));
+        ACControls ctrl(1);
 
-        auto start = std::chrono::steady_clock::now();
+        for (int i = 0; i <= 20; ++i) {
+            float u = -1.0 + i * (2.0 / 20.0);
+            ctrl.set_steer(u);
+            ctrl.update();
+            std::this_thread::sleep_for(100ms);
 
-        std::cout << "Zeroing gas" << std::endl;
-        while (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start) < 1000ms) {
-            wrapper.data().wAxisY = 0x00;
-            wrapper.update();
+            float x = physics->steerAngle;
+
+            std::cout << "u: " << u << ", x: " << x << std::endl;
         }
-        std::cout << "Gas zeroed" << std::endl;
 
         
-        wrapper.data().wAxisY = 0x7FFF;
-        wrapper.update();
-
-        start = std::chrono::steady_clock::now();
-        std::chrono::microseconds dt;
         
-        do {
-            dt = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start);
-        } while (physics->gas == 0 && dt < 1000ms);
 
-        std::cout << "Gas feedback after " << dt.count() << "us" << std::endl;
+        /*
+
+        bool is_shifting_up;
+        ctrl.set_steer(0);
+        ctrl.set_throttle(1);
+        ctrl.update();
+
+        int gear = 0;
+        while (gear < 5) {
+            std::cout << "Gear: " << (physics->gear - 1) << " @ " << physics->rpms << "RPM" << std::endl;
+
+            if (physics->rpms > 5000) {
+                ctrl.shift_up(true);
+                ctrl.update();
+                ctrl.shift_up(false);
+                ctrl.update();
+            }
+        }
+        */
     }
     catch (const std::exception& e) {
         std::cout << e.what() << std::endl;

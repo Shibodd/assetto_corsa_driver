@@ -32,6 +32,12 @@
     <ClInclude Include="vjoy\vjoyinterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vjoy_device_wrapper.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ac_controls.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="vjoy\vJoyInterface.dll" />

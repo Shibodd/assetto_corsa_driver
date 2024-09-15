@@ -1,6 +1,9 @@
 #pragma once
 
+#define NOMINMAX
 #include <windows.h>
+#undef NOMINMAX
+
 #include <system_error>
 
 template <typename T>

@@ -1,5 +1,7 @@
 #pragma once
 
+namespace ac_shm {
+
 typedef int AC_STATUS;
 
 #define AC_OFF 0
@@ -173,3 +175,6 @@ struct SPageFileStatic {
 };
 
 #pragma pack(pop)
+
+
+}; // namespace ac_shm

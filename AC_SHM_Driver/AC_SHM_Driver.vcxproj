@@ -104,6 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -131,10 +132,12 @@
     <ClCompile Include="AC_SHM_Driver.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ac_controls.hpp" />
     <ClInclude Include="shared_file_out.h" />
     <ClInclude Include="shm_struct_wrapper.hpp" />
     <ClInclude Include="vjoy\public.h" />
     <ClInclude Include="vjoy\vjoyinterface.h" />
+    <ClInclude Include="vjoy_device_wrapper.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="vjoy\vJoyInterface.dll">
